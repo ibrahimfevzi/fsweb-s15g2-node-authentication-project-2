@@ -21,10 +21,12 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "dotenv": "^16.1.1",
     "express": "^4.18.1",
     "helmet": "^5.0.2",
     "jsonwebtoken": "^9.0.0",
     "knex": "^2.0.0",
+    "nodenv": "^0.1.0",
     "sqlite3": "^5.0.8"
   },
   "repository": {
