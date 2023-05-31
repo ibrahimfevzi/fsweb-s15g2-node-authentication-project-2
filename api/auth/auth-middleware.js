@@ -19,7 +19,7 @@ const sinirli = (req, res, next) => {
     Alt akıştaki middlewarelar için hayatı kolaylaştırmak için kodu çözülmüş tokeni req nesnesine koyun!
   */
   try {
-    const token = req.headers.authorization;
+    const token = req.headers["authorization"];
     if (!token) {
       return next({ status: 401, message: "Token gereklidir" });
     }
