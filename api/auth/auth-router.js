@@ -18,14 +18,16 @@ router.post("/register", rolAdiGecerlimi, async (req, res, next) => {
     }
    */
 
-  const { username, password, role_name } = req.body;
-  const hash = bcrypt.hashSync(password, 8);
-  const newUser = { username, password: hash, role_name };
   try {
-    const user = await Users.add(newUser);
-    res.status(201).json(user);
-  } catch (err) {
-    next(err);
+    const hash = bcrypt.hashSync(req.body.password, 10);
+    const newUser = await Users.ekle({
+      role_name: req.role_name,
+      username: req.body.username,
+      password: hash,
+    });
+    res.status(201).json(newUser);
+  } catch (error) {
+    next(error);
   }
 });
 
@@ -49,29 +51,31 @@ router.post("/login", usernameVarmi, (req, res, next) => {
     }
    */
 
-  const { username, password } = req.body;
-
-  function tokenBuilder(user) {
-    const payload = {
-      subject: user.user_id,
-      username: user.username,
-      role_name: user.role_name,
-    };
-    const options = {
-      expiresIn: "1d",
-    };
-    return jwt.sign(payload, JWT_SECRET, options);
+  try {
+    const { password } = req.body;
+    const passwordControl = bcrypt.compareSync(password, req.user.password);
+    if (passwordControl) {
+      const token = jwt.sign(
+        {
+          subject: req.user.user_id, //sub
+          username: req.user.username,
+          role_name: req.user.role_name,
+        },
+        JWT_SECRET,
+        { expiresIn: "1d" }
+      );
+      res
+        .status(200)
+        .json({ message: `${req.user.username} geri geldi`, token: token });
+    } else {
+      next({
+        status: 401,
+        message: "Geçersiz kriter",
+      });
+    }
+  } catch (error) {
+    next(error);
   }
-
-  if (bcrypt.compareSync(password, req.user.password)) {
-    const token = tokenBuilder(req.user);
-    res.status(200).json({
-      message: `${username} geri geldi!`,
-      token,
-    });
-  }
-
-  // next(); // Bu satırı kaldırın veya burada çağırmayın, zaten middleware sonunda çağrılacak
 });
 
 module.exports = router;
