@@ -65,11 +65,10 @@ const usernameVarmi = (req, res, next) => {
       "message": "Geçersiz kriter"
     }
   */
-
   try {
     const { username } = req.body;
     if (!username) {
-      return next({ status: 401, message: "Geçersiz kriter" });
+      return res.status(401).json({ message: "Geçersiz kriter" });
     }
     next();
   } catch (err) {

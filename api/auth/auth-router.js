@@ -50,13 +50,6 @@ router.post("/login", usernameVarmi, (req, res, next) => {
    */
 
   const { username, password } = req.body;
-  if (bcrypt.compareSync(password, req.user.password)) {
-    const token = tokenBuilder(req.user);
-    res.status(200).json({
-      message: `${username} geri geldi!`,
-      token,
-    });
-  }
 
   function tokenBuilder(user) {
     const payload = {
@@ -70,7 +63,15 @@ router.post("/login", usernameVarmi, (req, res, next) => {
     return jwt.sign(payload, JWT_SECRET, options);
   }
 
-  next();
+  if (bcrypt.compareSync(password, req.user.password)) {
+    const token = tokenBuilder(req.user);
+    res.status(200).json({
+      message: `${username} geri geldi!`,
+      token,
+    });
+  }
+
+  // next(); // Bu satırı kaldırın veya burada çağırmayın, zaten middleware sonunda çağrılacak
 });
 
 module.exports = router;
