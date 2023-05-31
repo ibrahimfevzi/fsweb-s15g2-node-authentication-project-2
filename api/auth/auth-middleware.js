@@ -16,9 +16,24 @@ const sinirli = (req, res, next) => {
 
     Alt akıştaki middlewarelar için hayatı kolaylaştırmak için kodu çözülmüş tokeni req nesnesine koyun!
   */
-}
+  try {
+    const token = req.headers.authorization;
+    if (!token) {
+      return next({ status: 401, message: "Token gereklidir" });
+    }
+    jwt.verify(token, JWT_SECRET, (err, decodedToken) => {
+      if (err) {
+        return next({ status: 401, message: "Token geçersizdir." });
+      }
+      req.decodedToken = decodedToken;
+      next();
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
-const sadece = role_name => (req, res, next) => {
+const sadece = (role_name) => (req, res, next) => {
   /*
     
 	Kullanıcı, Authorization headerında, kendi payloadu içinde bu fonksiyona bağımsız değişken olarak iletilen 
@@ -30,8 +45,17 @@ const sadece = role_name => (req, res, next) => {
 
     Tekrar authorize etmekten kaçınmak için kodu çözülmüş tokeni req nesnesinden çekin!
   */
-}
 
+  try {
+    const { role_name } = req.decodedToken;
+    if (role_name !== role_name) {
+      return next({ status: 403, message: "Bu, senin için değil" });
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
 
 const usernameVarmi = (req, res, next) => {
   /*
@@ -41,8 +65,17 @@ const usernameVarmi = (req, res, next) => {
       "message": "Geçersiz kriter"
     }
   */
-}
 
+  try {
+    const { username } = req.body;
+    if (!username) {
+      return next({ status: 401, message: "Geçersiz kriter" });
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
 
 const rolAdiGecerlimi = (req, res, next) => {
   /*
@@ -63,11 +96,32 @@ const rolAdiGecerlimi = (req, res, next) => {
       "message": "rol adı 32 karakterden fazla olamaz"
     }
   */
-}
+
+  try {
+    const { role_name } = req.body;
+    if (!role_name || !role_name.trim()) {
+      req.role_name = "student";
+      return next();
+    }
+    if (role_name.trim() === "admin") {
+      return next({ status: 422, message: "Rol adı admin olamaz" });
+    }
+    if (role_name.trim().length > 32) {
+      return next({
+        status: 422,
+        message: "rol adı 32 karakterden fazla olamaz",
+      });
+    }
+    req.role_name = role_name.trim();
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
 
 module.exports = {
   sinirli,
   usernameVarmi,
   rolAdiGecerlimi,
   sadece,
-}
+};
