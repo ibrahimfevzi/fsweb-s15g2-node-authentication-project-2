@@ -1,4 +1,6 @@
 const { JWT_SECRET } = require("../secrets"); // bu secreti kullanın!
+const jwt = require("jsonwebtoken");
+const Users = require("../users/users-model");
 
 const sinirli = (req, res, next) => {
   /*
@@ -23,7 +25,7 @@ const sinirli = (req, res, next) => {
     }
     jwt.verify(token, JWT_SECRET, (err, decodedToken) => {
       if (err) {
-        return next({ status: 401, message: "Token geçersizdir." });
+        return next({ status: 401, message: "token gecersizdir" });
       }
       req.decodedToken = decodedToken;
       next();
@@ -46,18 +48,13 @@ const sadece = (role_name) => (req, res, next) => {
     Tekrar authorize etmekten kaçınmak için kodu çözülmüş tokeni req nesnesinden çekin!
   */
 
-  try {
-    const { role_name } = req.decodedToken;
-    if (role_name !== role_name) {
-      return next({ status: 403, message: "Bu, senin için değil" });
-    }
+  if (req.decodedToken && req.decodedToken.role_name === role_name) {
     next();
-  } catch (err) {
-    next(err);
+  } else {
+    next({ status: 403, message: "Bu, senin için değil" });
   }
 };
-
-const usernameVarmi = (req, res, next) => {
+const usernameVarmi = async (req, res, next) => {
   /*
     req.body de verilen username veritabanında yoksa
     status: 401
@@ -66,13 +63,18 @@ const usernameVarmi = (req, res, next) => {
     }
   */
   try {
-    const { username } = req.body;
-    if (!username) {
-      return res.status(401).json({ message: "Geçersiz kriter" });
+    const presentUser = await Users.goreBul({
+      username: req.body.username,
+    });
+    if (!presentUser.length) {
+      //array döneceği için uzunluğu 0 olanı yani boş olanı için yazdık
+      next({ status: 401, message: "Geçersiz kriter" });
+    } else {
+      req.user = presentUser[0];
+      next();
     }
-    next();
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    next(error);
   }
 };
 
