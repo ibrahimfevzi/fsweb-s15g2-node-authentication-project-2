@@ -6,6 +6,4 @@
   Eğer bunları sağlamazsanız Testler geçmez ve diğer yazılımcılar bu repoyu klonladıklarında
   projeyi beklendiği gibi çalıştıramazlar.
  */
-module.exports = {
-
-}
+module.exports = {};

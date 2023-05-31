@@ -1,4 +1,4 @@
-const db = require('../../data/db-config.js');
+const db = require("../../data/db-config.js");
 
 function bul() {
   /**
@@ -18,6 +18,9 @@ function bul() {
       }
     ]
    */
+
+  const query = db("users as u").join("roles as r", "u.role_id", "r.role_id");
+  return query.select("user_id", "username", "role_name");
 }
 
 function goreBul(filtre) {
@@ -34,6 +37,12 @@ function goreBul(filtre) {
       }
     ]
    */
+
+  const query = db("users as u").join("roles as r", "u.role_id", "r.role_id");
+  if (filtre) {
+    query.where(filtre);
+  }
+  return query.select("user_id", "username", "password", "role_name");
 }
 
 function idyeGoreBul(user_id) {
@@ -47,6 +56,12 @@ function idyeGoreBul(user_id) {
       "role_name": "instructor"
     }
    */
+
+  return db("users as u")
+    .join("roles as r", "u.role_id", "r.role_id")
+    .where("user_id", user_id)
+    .select("user_id", "username", "role_name")
+    .first();
 }
 
 /**
@@ -67,21 +82,26 @@ function idyeGoreBul(user_id) {
     "role_name": "team lead"
   }
  */
-async function ekle({ username, password, role_name }) { // bu kısım hazır
-  let created_user_id
-  await db.transaction(async trx => {
-    let role_id_to_use
-    const [role] = await trx('roles').where('role_name', role_name)
+async function ekle({ username, password, role_name }) {
+  // bu kısım hazır
+  let created_user_id;
+  await db.transaction(async (trx) => {
+    let role_id_to_use;
+    const [role] = await trx("roles").where("role_name", role_name);
     if (role) {
-      role_id_to_use = role.role_id
+      role_id_to_use = role.role_id;
     } else {
-      const [role_id] = await trx('roles').insert({ role_name: role_name })
-      role_id_to_use = role_id
+      const [role_id] = await trx("roles").insert({ role_name: role_name });
+      role_id_to_use = role_id;
     }
-    const [user_id] = await trx('users').insert({ username, password, role_id: role_id_to_use })
-    created_user_id = user_id
-  })
-  return idyeGoreBul(created_user_id)
+    const [user_id] = await trx("users").insert({
+      username,
+      password,
+      role_id: role_id_to_use,
+    });
+    created_user_id = user_id;
+  });
+  return idyeGoreBul(created_user_id);
 }
 
 module.exports = {
